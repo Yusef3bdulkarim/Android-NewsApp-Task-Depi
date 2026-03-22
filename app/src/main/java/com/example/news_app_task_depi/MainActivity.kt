@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.remote.creation.compose.state.log
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import com.example.news_app_task_depi.databinding.ActivityMainBinding
 import retrofit2.Call
 import retrofit2.Callback
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         loadNews()
+        biding.swipper.setOnRefreshListener { loadNews() }
 
     }
 
@@ -46,8 +48,13 @@ class MainActivity : AppCompatActivity() {
                 p1: Response<News_Models?>?
             ) {
                 val news = p1?.body()
-                val articles = news?.articles
-                Log.d("trace", "Articlas $articles")
+                val articles = news?.articles!!
+                articles.removeAll {
+                    it.title == "[Removed}"
+                }
+                showNews(articles)
+                biding.progress.isVisible = false
+                biding.swipper.isRefreshing = false
             }
 
             override fun onFailure(
@@ -55,9 +62,15 @@ class MainActivity : AppCompatActivity() {
                 p1: Throwable?
             ) {
                 Log.d("trace", "Error:${p1?.message}")
+                biding.progress.isVisible = false
 
             }
 
         })
+    }
+
+    private fun showNews(artical: ArrayList<Articles_Models>) {
+        val adapter = NewsAdapter(this, artical)
+        biding.newsList.adapter = adapter
     }
 }
